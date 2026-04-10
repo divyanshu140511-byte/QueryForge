@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QueryForge - My Query History</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+body {
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    background: #0f172a;
+    color: white;
+    padding: 40px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 20px;
+}
+
+.header h1 {
+    margin: 0;
+    background: linear-gradient(135deg, #38bdf8, #8b5cf6);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background 0.3s;
+}
+
+.btn-back:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.history-item {
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 20px 0;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.timestamp {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.nl-query {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #e2e8f0;
+}
+
+.sql-query {
+    background: rgba(0,0,0,0.3);
+    padding: 15px;
+    border-radius: 8px;
+    font-family: monospace;
+    color: #a7f3d0;
+    border-left: 3px solid #38bdf8;
+    overflow-x: auto;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 50px;
+    color: #94a3b8;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    color: #334155;
+}
+
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1><i class="fa-solid fa-clock-rotate-left"></i> My Query History</h1>
+    <a href="/index" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to Studio</a>
+</div>
+
+<div class="card">
+    {% if history %}
+        {% for h in history %}
+        <div class="history-item">
+            <div class="timestamp"><i class="fa-solid fa-calendar-clock"></i> {{ h.timestamp.strftime('%B %d, %Y - %I:%M %p') }}</div>
+            <div class="nl-query">"{{ h.nl_query }}"</div>
+            <div class="sql-query">{{ h.sql_query }}</div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-ghost"></i>
+            <h3>No Queries Yet</h3>
+            <p>Your generated SQL queries will appear here once you start using the studio.</p>
+        </div>
+    {% endif %}
+</div>
+
+</body>
+</html>

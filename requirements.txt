@@ -1,0 +1,13 @@
+flask
+duckdb
+pandas
+python-dotenv
+groq
+sqlalchemy
+psycopg2-binary
+flask-sqlalchemy
+flask-login
+flask-bcrypt
+email-validator
+sendgrid
+gunicorn

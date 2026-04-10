@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QueryForge - Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+body {
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    background: #0f172a;
+    color: white;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.particles {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.login-card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    padding: 40px;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    z-index: 2;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.login-card h2 {
+    font-size: 2rem;
+    margin-bottom: 5px;
+    background: linear-gradient(135deg, #38bdf8, #8b5cf6);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.login-card p {
+    color: #94a3b8;
+    margin-bottom: 30px;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group i {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 15px;
+    color: #94a3b8;
+}
+
+.input-group input {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 15px 12px 40px;
+    border-radius: 10px;
+    color: white;
+    font-family: inherit;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: all 0.3s;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+}
+
+.btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #38bdf8, #8b5cf6);
+    color: white;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+}
+
+.error-message {
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+
+.links {
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: #94a3b8;
+}
+
+.links a {
+    color: #38bdf8;
+    text-decoration: none;
+}
+.links a:hover {
+    text-decoration: underline;
+}
+</style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="login-card">
+    <i class="fa-solid fa-robot" style="font-size: 3rem; color: #38bdf8; margin-bottom: 10px;"></i>
+    <h2>Welcome Back</h2>
+    <p>Login to QueryForge to continue</p>
+
+    {% if error %}
+    <div class="error-message">
+        <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="/login">
+        <div class="input-group">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" name="username" placeholder="Username" required>
+        </div>
+        <div class="input-group">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" name="password" placeholder="Password" required>
+        </div>
+        <label style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" name="login_as_admin" style="width: auto; scale: 1.2;"> Login as Administrator
+        </label>
+        <button type="submit" class="btn">Login</button>
+    </form>
+
+    <div class="links">
+        Don't have an account? <a href="/register">Register</a>
+    </div>
+</div>
+
+<script>
+    const particles = document.getElementById('particles');
+    for (let i = 0; i < 20; i++) {
+        let span = document.createElement('span');
+        span.style.position = "absolute";
+        span.style.width = Math.random() * 4 + 1 + "px";
+        span.style.height = span.style.width;
+        span.style.background = "rgba(255,255,255,0.3)";
+        span.style.borderRadius = "50%";
+        span.style.left = Math.random() * 100 + "%";
+        span.style.top = Math.random() * 100 + "%";
+        span.style.animation = `float ${Math.random() * 5 + 3}s infinite alternate ease-in-out`;
+        particles.appendChild(span);
+    }
+    const style = document.createElement('style');
+    style.innerHTML = `@keyframes float {
+        from { transform: translateY(0); }
+        to { transform: translateY(-20px); }
+    }`;
+    document.head.appendChild(style);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Query Forge AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+.schema-preview {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+.sidebar-footer {
+    padding-top: 15px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: auto;
+}
+.sidebar.collapsed .sidebar-footer {
+    display: none;
+}
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    border-radius: 8px;
+    color: #94a3b8;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.95rem;
+}
+.nav-link i {
+    width: 20px;
+    text-align: center;
+}
+.nav-link:hover {
+    background: rgba(255,255,255,0.08);
+    color: #f8fafc;
+    transform: translateX(4px);
+}
+.nav-link.admin-link {
+    border-left: 3px solid #e11d48;
+}
+.nav-link.admin-link:hover {
+    background: rgba(225, 29, 72, 0.15);
+    color: #fda4af;
+    border-color: rgba(225, 29, 72, 0.3);
+}
+.nav-link.logout-link {
+    background: rgba(0,0,0,0.2);
+}
+.nav-link.logout-link:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+</style>
+</head>
+
+<body>
+
+<!-- Login Overlay Removed since we use backend auth -->
+<button id="toggleBtn" title="Toggle Sidebar"><i class="fa-solid fa-bars"></i></button>
+
+<div class="sidebar">
+    <h2 class="sidebar-title"><i class="fa-solid fa-database"></i> <span>Query Forge</span></h2>
+
+    <div class="sidebar-item" data-tooltip="Data Source">
+        <label><i class="fa-solid fa-server"></i> <span>Source</span></label>
+        <select id="source" class="modern-input" style="padding: 10px;">
+            <option value="csv">CSV Upload</option>
+            <option value="db">Database Connection</option>
+        </select>
+    </div>
+
+    <!-- CSV Input Section -->
+    <div class="sidebar-item" id="csvSection" data-tooltip="Upload CSV">
+        <input type="file" id="csvFile" accept=".csv" style="display: none;">
+        <label for="csvFile" class="file-upload" id="uploadBtn">
+            <i class="fa-solid fa-file-csv"></i>
+            <span id="fileText">Choose CSV</span>
+        </label>
+    </div>
+
+    <!-- Database URI Input Section -->
+    <div class="sidebar-item" id="dbSection" style="display: none;" data-tooltip="Database URI (e.g. postgresql://...)">
+        <label><i class="fa-solid fa-link"></i> <span>Connection URI</span></label>
+        <input type="text" id="dbUri" placeholder="sqlite:///data.db" class="modern-input">
+    </div>
+
+    <div class="sidebar-item" data-tooltip="Load Schema">
+        <button onclick="loadSchema()" id="loadSchemaBtn">
+            <i class="fa-solid fa-magic"></i>
+            <span>Load Schema</span>
+        </button>
+    </div>
+
+    <div class="schema-preview" id="schemaBox">
+        <div class="empty-schema"><i class="fa-solid fa-table"></i><br>Schema will appear here...</div>
+    </div>
+
+    <div class="sidebar-footer">
+        <a href="{{ url_for('history') }}" class="nav-link">
+            <i class="fa-solid fa-clock-rotate-left"></i> <span>Query History</span>
+        </a>
+        
+        {% if current_user.role == 'admin' %}
+        <a href="{{ url_for('admin_dashboard') }}" class="nav-link admin-link">
+            <i class="fa-solid fa-user-shield"></i> <span>Admin Panel</span>
+        </a>
+        {% endif %}
+
+        <a href="{{ url_for('logout') }}" class="nav-link logout-link">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Logout</span>
+        </a>
+    </div>
+</div>
+
+<div class="chat-container">
+    <div class="ai-background-container">
+        <div class="ai-bg"></div>
+        <div class="ai-overlay"></div>
+        <div class="ai-accent"></div>
+        <div class="ai-mesh"></div>
+    </div>
+
+    <div id="emptyState" class="empty-state">
+        <div class="empty-icon"><i class="fa-solid fa-robot"></i></div>
+        <h2>Ask Anything</h2>
+        <p>Upload your data or connect a database to begin</p>
+    </div>
+
+    <div class="chat-content-scroll" id="chatContentScroll">
+        <div class="chat-box" id="chatBox"></div>
+
+        <div class="result-chart-container" id="resultContainer">
+            <div class="result-box" id="resultBox"></div>
+            <div class="chart-box">
+                <h3><i class="fa-solid fa-chart-pie"></i> Visual Analytics</h3>
+                <div><canvas id="chartCanvas"></canvas></div>
+            </div>
+        </div>
+
+        <div class="ai-insight-box" id="aiInsightBox" style="display: none;">
+            <div class="insight-header">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Automated AI Insight</span>
+            </div>
+            <div class="insight-content" id="insightContent"></div>
+        </div>
+    </div>
+
+    <div id="suggestionsBox" class="suggestions"></div>
+    <div class="input-area">
+        <input id="queryInput" placeholder="Ask questions about your data in plain English...">
+        <button onclick="sendQuery()">
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='script-clean.js') }}"></script>
+<script>
+const toggleBtn = document.getElementById("toggleBtn");
+const sidebar = document.querySelector(".sidebar");
+
+toggleBtn.onclick = () => {
+    sidebar.classList.toggle("collapsed");
+    sidebar.classList.toggle("active");
+};
+
+// Toggle UI sections based on Source type
+document.getElementById('source').addEventListener('change', function() {
+    const isDb = this.value === 'db';
+    document.getElementById('csvSection').style.display = isDb ? 'none' : 'block';
+    document.getElementById('dbSection').style.display = isDb ? 'block' : 'none';
+});
+
+// Update File Name
+document.getElementById("csvFile").addEventListener("change", function(e) {
+    const fileName = e.target.files[0]?.name || "Choose CSV";
+    document.getElementById("fileText").textContent = fileName;
+});
+</script>
+
+</body>
+</html>
