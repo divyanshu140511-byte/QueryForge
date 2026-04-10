@@ -75,9 +75,9 @@ df_cache = {}
 api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
     print("[WARNING] GROQ_API_KEY not set - AI features disabled")
-    api_key = None
-
-client = Groq(api_key=api_key)
+    client = None
+else:
+    client = Groq(api_key=api_key)
 
 MODEL = "llama-3.3-70b-versatile"
 
@@ -327,6 +327,9 @@ def generate_sql():
         nl_query = request.form['nl_query']
         schema = request.form['schema']
 
+        if client is None:
+            return jsonify({'error': 'AI features are disabled because GROQ_API_KEY is not set.'})
+
         messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": f"Schema:\n{schema}\n\nUser Query:\n{nl_query}\n\nSQL:"}
@@ -441,6 +444,9 @@ def execute_sql():
 def generate_insights():
     try:
         data_json = request.form.get('data')
+
+        if client is None:
+            return jsonify({'error': 'AI features are disabled because GROQ_API_KEY is not set.'})
         
         system_prompt = """You are a highly analytical AI Data Scientist.
 Review the provided JSON SQL querying results. 
