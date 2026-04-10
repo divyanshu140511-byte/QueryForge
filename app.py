@@ -18,7 +18,6 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignat
 # Load env
 load_dotenv()
 BASE_URL=os.getenv("BASE_URL")
-link = f"{BASE_URL}/confirm/{{token}}"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'queryforge-secret-key-default')

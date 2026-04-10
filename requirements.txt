@@ -11,3 +11,4 @@ flask-bcrypt
 email-validator
 sendgrid
 gunicorn
+flask-cors
