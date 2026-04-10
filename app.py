@@ -19,9 +19,16 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignat
 load_dotenv()
 BASE_URL=os.getenv("BASE_URL")
 
+import logging
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'queryforge-secret-key-default')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app_backend.db'
+database_url = os.environ.get('DATABASE_URL', 'sqlite:////tmp/app_backend.db')
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 CORS(app)
@@ -55,15 +62,20 @@ class QueryHistory(db.Model):
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-with app.app_context():
-    db.create_all()
+try:
+    with app.app_context():
+        db.create_all()
+        log.info("Database tables created successfully")
+except Exception as e:
+    log.error(f"Failed to create database tables: {e}")
 
 df_cache = {}
 
 # ===== API KEY =====
 api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
-    raise ValueError("[ERROR] GROQ_API_KEY not set")
+    print("[WARNING] GROQ_API_KEY not set - AI features disabled")
+    api_key = None
 
 client = Groq(api_key=api_key)
 
