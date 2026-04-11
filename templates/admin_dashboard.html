@@ -124,9 +124,7 @@ table tr:hover td {
 .btn-unblock {
     background: rgba(16, 185, 129, 0.1); color: #34d399; border-color: rgba(16, 185, 129, 0.3);
 }
-.btn-unblock:hover { background: rgba(16, 185, 129, 0.3); }
-.status-badge {
-    padding: 4px 8px;
+.btn-unblock:hover { background: rgba(16, 185, 129, 0.3); }\n.btn-delete {\n    background: rgba(239, 68, 68, 0.1);\n    color: #fca5a5;\n    border-color: rgba(239, 68, 68, 0.3);\n}\n.btn-delete:hover {\n    background: rgba(239, 68, 68, 0.4);\n}\n.status-badge {\n    padding: 4px 8px;
     border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 600;
@@ -152,9 +150,7 @@ table tr:hover td {
                 <th>Username</th>
                 <th>Role</th>
                 <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
+                <th>Action</th>\n                <th>Delete</th>\n            </tr>\n        </thead>
         <tbody>
             {% for user in users %}
             <tr>
@@ -173,19 +169,7 @@ table tr:hover td {
                     {% endif %}
                 </td>
                 <td>
-                    {% if user.id != current_user.id %}
-                    <form method="POST" action="{{ url_for('toggle_block', user_id=user.id) }}" style="margin: 0;">
-                        {% if user.is_blocked %}
-                            <button type="submit" class="btn-action btn-unblock"><i class="fa-solid fa-unlock"></i> Unblock</button>
-                        {% else %}
-                            <button type="submit" class="btn-action btn-block"><i class="fa-solid fa-lock"></i> Block</button>
-                        {% endif %}
-                    </form>
-                    {% else %}
-                        <span style="color: #64748b; font-size: 0.85rem;">(You)</span>
-                    {% endif %}
-                </td>
-            </tr>
+                    {% if user.id != current_user.id %}\n                    <form method="POST" action="{{ url_for('toggle_block', user_id=user.id) }}" style="margin: 0;">\n                        {% if user.is_blocked %}\n                            <button type="submit" class="btn-action btn-unblock"><i class="fa-solid fa-unlock"></i> Unblock</button>\n                        {% else %}\n                            <button type="submit" class="btn-action btn-block"><i class="fa-solid fa-lock"></i> Block</button>\n                        {% endif %}\n                    </form>\n                    {% else %}\n                        <span style="color: #64748b; font-size: 0.85rem;">(You)</span>\n                    {% endif %}\n                </td>\n                <td>\n                    {% if user.id != current_user.id %}\n                    <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" style="display: inline; margin-left: 5px;" onsubmit="return confirm('Delete {{ user.username }}? All query history will be permanently lost.');">\n                        <button type="submit" class="btn-action btn-delete" title="Delete User"><i class="fa-solid fa-trash"></i> Delete</button>\n                    </form>\n                    {% else %}\n                        <span style="color: #64748b; font-size: 0.85rem;">-</span>\n                    {% endif %}\n                </td>\n            </tr>
             {% endfor %}
         </tbody>
     </table>

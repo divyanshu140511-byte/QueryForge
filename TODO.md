@@ -1,10 +1,9 @@
-# QueryForge Psycopg2 Test Integration - TODO
+# Admin Delete User Feature - Implementation Steps
 
-## Plan Breakdown (Approved)
-1. [x] **Create TODO.md** (track progress) ✓
-2. [x] **Edit app.py**: Insert raw psycopg2 test block after `db.create_all()` try/except. ✓
-3. [x] **Verify edit**: Check insertion via read_file. ✓ (Confirmed in app.py lines ~72-88)
-4. [x] **Test locally**: Run `python app.py` → Prints on startup (local SQLite skips test; set DATABASE_URL=postgresql://... for full test).
-5. [ ] **attempt_completion**: Confirm task complete.
+## Plan Breakdown:
+1. [PENDING] Edit app.py: Add /admin/delete_user/<user_id> POST route with delete logic.
+2. [PENDING] Edit templates/admin_dashboard.html: Add Delete column, button/form in table.
+3. [PENDING] Test locally: python app.py, login admin, delete user.
+4. [DONE] Deploy to Render (user handles commit/push).
 
-**Status:** All steps complete except final confirmation. Test block added successfully - runs on app init, prints SUCCESS/FAILED based on DATABASE_URL.
+Next: Implement step 1 & 2.

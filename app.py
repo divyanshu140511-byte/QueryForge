@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_cors import CORS
 import os
@@ -10,6 +11,7 @@ from sqlalchemy import create_engine, text, inspect
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
+from flask import flash
 from datetime import datetime
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail as SGMail
@@ -64,9 +66,10 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 with app.app_context():
-    db.drop_all()  # Dev: recreate fresh
+    if 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']:
+        db.drop_all()  # Dev: local only
     db.create_all()
-    log.info("Database tables recreated. User count: %d", User.query.count())
+    log.info("DB ready. Users: %d (URI: %s)", User.query.count(), app.config['SQLALCHEMY_DATABASE_URI'][:50]+"...")
     
 # Test raw psycopg2 connection (for Postgres) - standalone
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -253,19 +256,7 @@ def admin_dashboard():
     all_history = QueryHistory.query.order_by(QueryHistory.timestamp.desc()).limit(100).all()
     return render_template("admin_dashboard.html", users=users, history=all_history)
 
-@app.route("/admin/toggle_block/<int:user_id>", methods=["POST"])
-@login_required
-def toggle_block(user_id):
-    if current_user.role != 'admin':
-        return "Access Denied: Admins Only", 403
-    
-    target_user = User.query.get_or_404(user_id)
-    # Prevent self-blocking
-    if target_user.id != current_user.id:
-        target_user.is_blocked = not getattr(target_user, 'is_blocked', False)
-        db.session.commit()
-        
-    return redirect(url_for('admin_dashboard'))
+@app.route("/admin/toggle_block/<int:user_id>", methods=["POST"])\n@login_required\ndef toggle_block(user_id):\n    if current_user.role != 'admin':\n        return "Access Denied: Admins Only", 403\n    \n    target_user = User.query.get_or_404(user_id)\n    # Prevent self-blocking\n    if target_user.id != current_user.id:\n        target_user.is_blocked = not getattr(target_user, 'is_blocked', False)\n        db.session.commit()\n        \n    return redirect(url_for('admin_dashboard'))\n\n\n@app.route("/admin/delete_user/<int:user_id>", methods=["POST"])\n@login_required\ndef delete_user(user_id):\n    if current_user.role != 'admin':\n        return "Access Denied: Admins Only", 403\n    \n    target_user = User.query.get_or_404(user_id)\n    if target_user.id == current_user.id:\n        flash("Cannot delete your own account!", "error")\n        return redirect(url_for('admin_dashboard'))\n    \n    # Delete related query history first\n    QueryHistory.query.filter_by(user_id=target_user.id).delete()\n    db.session.delete(target_user)\n    db.session.commit()\n    flash(f"User '{target_user.username}' deleted successfully.", "success")\n    return redirect(url_for('admin_dashboard'))
 
 
 
