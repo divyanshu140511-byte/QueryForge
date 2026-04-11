@@ -191,6 +191,35 @@ body {
         margin-top: 40px;
     }
 }
+
+.powered-badge {
+    display: inline-block;
+    padding: 8px 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #f8fafc;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    text-shadow: 0 0 10px rgba(255,255,255,0.2);
+    animation: fadeIn 1s ease-out;
+}
+
+.powered-badge i {
+    color: #38bdf8;
+    margin-right: 8px;
+    filter: drop-shadow(0 0 5px rgba(56,189,248,0.5));
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 </style>
 </head>
 <body>
@@ -199,6 +228,9 @@ body {
     <div class="particles"></div>
 
     <div class="content">
+        <div class="powered-badge">
+            <i class="fa-solid fa-bolt"></i> POWERED BY DROP
+        </div>
         <h1 class="gradient-text">
             AI-Powered SQL <br>
             QueryForge <span class="ai-glow">AI</span>
