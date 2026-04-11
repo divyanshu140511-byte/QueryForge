@@ -124,5 +124,5 @@ QueryForge is production-ready for platforms like **Render**, **Heroku**, or **R
 ---
 
 <div align="center">
-  <i>Built with ❤️ by an AI-Augmented Developer</i>
+  <i>POWERED BY DROP</i>
 </div>
