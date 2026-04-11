@@ -63,27 +63,24 @@ class QueryHistory(db.Model):
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-try:
-    with app.app_context():
-        db.create_all()
-        log.info("Database tables created successfully")
-
-    # Test raw psycopg2 connection (for Postgres)
-    DATABASE_URL = os.getenv("DATABASE_URL")
-    if DATABASE_URL and "postgresql" in DATABASE_URL:
-        try:
-            conn = psycopg2.connect(DATABASE_URL)
-            cursor = conn.cursor()
-            cursor.execute("SELECT 1;")
-            result = cursor.fetchone()
-            print("Raw psycopg2 test: SUCCESS", result)
-            cursor.close()
-            conn.close()
-        except Exception as e:
-            print("Raw psycopg2 test: FAILED", str(e))
-
-except Exception as e:
-    log.error(f"Failed to create database tables: {e}")
+with app.app_context():
+    db.drop_all()  # Dev: recreate fresh
+    db.create_all()
+    log.info("Database tables recreated. User count: %d", User.query.count())
+    
+# Test raw psycopg2 connection (for Postgres) - standalone
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL and "postgresql" in DATABASE_URL:
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1;")
+        result = cursor.fetchone()
+        print("Raw psycopg2 test: SUCCESS", result)
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print("Raw psycopg2 test: FAILED", str(e))
 
 df_cache = {}
 
@@ -102,18 +99,23 @@ SYSTEM_PROMPT = """You are an expert SQL assistant.
 
 Rules:
 - ALWAYS use table name EXACTLY as given in schema (e.g., data_table)
-- Use LIMIT 20 for SELECT
-- Use correct column names
-- Handle GROUP BY, ORDER BY, aggregations (SUM, COUNT, AVG)
-- ALWAYS use double quotes (") for column names with spaces. NEVER use backticks (`).
-- If query unclear → return INVALID_QUERY
-Return ONLY SQL, no explanation.
-"""
+- Use LIMIT 20 for SELECT unless specified
+- Use correct column names with double quotes " for spaces
+- Support JOIN, GROUP BY, HAVING, ORDER BY, aggregations (SUM, COUNT, AVG, MIN, MAX), subqueries, window functions
+- Handle multiple tables if schema shows them (data_table1 JOIN data_table2 ON ...)
+- NEVER use backticks (`). Use LIMIT for safety.
+- If unclear → return INVALID_QUERY
+Return ONLY valid DuckDB SQL, no explanation."""
 
 # ===== ROUTES =====
 @app.route("/health")
 def health():
-    return jsonify({"status": "ok", "cache": list(df_cache.keys())})
+    return jsonify({
+        "status": "ok", 
+        "cache_keys": list(df_cache.keys()),
+        "cache_size": len(df_cache),
+        "user_count": User.query.count()
+    })
 
 @app.route("/")
 def landing():
