@@ -141,6 +141,18 @@ table tr:hover td {
     <a href="/index" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to Studio</a>
 </div>
 
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div style="margin-bottom: 20px;">
+    {% for message in messages %}
+      <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #bae6fd; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+          {{ message }}
+      </div>
+    {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
 <div class="card">
     <h2>Registered Users ({{ users|length }})</h2>
     <table>
@@ -169,7 +181,28 @@ table tr:hover td {
                     {% endif %}
                 </td>
                 <td>
-                    {% if user.id != current_user.id %}\n                    <form method="POST" action="{{ url_for('toggle_block', user_id=user.id) }}" style="margin: 0;">\n                        {% if user.is_blocked %}\n                            <button type="submit" class="btn-action btn-unblock"><i class="fa-solid fa-unlock"></i> Unblock</button>\n                        {% else %}\n                            <button type="submit" class="btn-action btn-block"><i class="fa-solid fa-lock"></i> Block</button>\n                        {% endif %}\n                    </form>\n                    {% else %}\n                        <span style="color: #64748b; font-size: 0.85rem;">(You)</span>\n                    {% endif %}\n                </td>\n                <td>\n                    {% if user.id != current_user.id %}\n                    <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" style="display: inline; margin-left: 5px;" onsubmit="return confirm('Delete {{ user.username }}? All query history will be permanently lost.');">\n                        <button type="submit" class="btn-action btn-delete" title="Delete User"><i class="fa-solid fa-trash"></i> Delete</button>\n                    </form>\n                    {% else %}\n                        <span style="color: #64748b; font-size: 0.85rem;">-</span>\n                    {% endif %}\n                </td>\n            </tr>
+                    {% if user.id != current_user.id %}
+                        {% if user.role == 'admin' %}
+                            <span style="color: #64748b; font-size: 0.85rem;">Admin</span>
+                        {% else %}
+                            <div style="display: flex; gap: 10px;">
+                                <form method="POST" action="{{ url_for('toggle_block', user_id=user.id) }}" style="margin: 0;">
+                                    {% if user.is_blocked %}
+                                        <button type="submit" class="btn-action btn-unblock"><i class="fa-solid fa-unlock"></i> Unblock</button>
+                                    {% else %}
+                                        <button type="submit" class="btn-action btn-block"><i class="fa-solid fa-lock"></i> Block</button>
+                                    {% endif %}
+                                </form>
+                                <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.');">
+                                    <button type="submit" class="btn-action btn-block"><i class="fa-solid fa-trash"></i> Delete</button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <span style="color: #64748b; font-size: 0.85rem;">(You)</span>
+                    {% endif %}
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
