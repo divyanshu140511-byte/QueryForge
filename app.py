@@ -3,6 +3,7 @@ from flask_cors import CORS
 import os
 import duckdb
 import pandas as pd
+import psycopg2
 from dotenv import load_dotenv
 from groq import Groq
 from sqlalchemy import create_engine, text, inspect
@@ -66,6 +67,21 @@ try:
     with app.app_context():
         db.create_all()
         log.info("Database tables created successfully")
+
+    # Test raw psycopg2 connection (for Postgres)
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    if DATABASE_URL and "postgresql" in DATABASE_URL:
+        try:
+            conn = psycopg2.connect(DATABASE_URL)
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1;")
+            result = cursor.fetchone()
+            print("Raw psycopg2 test: SUCCESS", result)
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print("Raw psycopg2 test: FAILED", str(e))
+
 except Exception as e:
     log.error(f"Failed to create database tables: {e}")
 
