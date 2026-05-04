@@ -86,7 +86,8 @@ if DATABASE_URL and "postgresql" in DATABASE_URL:
         print("Raw psycopg2 test: FAILED", str(e))
 
 df_cache = {}
-
+db_engine_cache = {}
+db_schema_cache = {}
 # ===== API KEY =====
 api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
@@ -319,15 +320,21 @@ def schema():
             file.seek(0)
 
             # 🔥 SAFE READ
-            df = pd.read_csv(file, encoding="latin1", on_bad_lines="skip", nrows=100000)
+            cache_key = file.name
+            if cache_key in df_cache:
+                df = df_cache[cache_key]
+                print("[SUCCESS] Using cached DF for schema")
+            else:
+                df = pd.read_csv(file, encoding="latin1", on_bad_lines="skip", nrows=100000)
+                df_cache[cache_key] = df
+                
             print("[INFO] Columns:", df.columns)
 
-            df_cache[file.name] = df
-
-            schema_text = "Table: data_table\n"
-
+            schema_text = "Table: data_table\nColumns: "
+            cols = []
             for col, dtype in zip(df.columns, df.dtypes):
-                schema_text += f"\"{col}\" (type: {dtype})\n"
+                cols.append(f"{col}({dtype})")
+            schema_text += ", ".join(cols)
 
             print("[SUCCESS] Schema created")
             return jsonify({"schema": schema_text})
@@ -337,21 +344,28 @@ def schema():
             if not db_uri:
                 return jsonify({"error": "No Database URI provided"})
             
+            if db_uri in db_schema_cache:
+                return jsonify({"schema": db_schema_cache[db_uri]})
+            
             try:
                 engine = create_engine(db_uri)
                 inspector = inspect(engine)
                 schema_text = ""
                 
                 for table_name in inspector.get_table_names():
-                    schema_text += f"Table: {table_name}\n"
+                    schema_text += f"Table: {table_name}\nColumns: "
+                    cols = []
                     for column in inspector.get_columns(table_name):
-                        schema_text += f"\"{column['name']}\" (type: {column['type']})\n"
-                    schema_text += "\n"
+                        cols.append(f"{column['name']}({column['type']})")
+                    schema_text += ", ".join(cols) + "\n\n"
                 
                 if not schema_text:
                     schema_text = "No tables found in the database."
+                else:
+                    schema_text = schema_text.strip()
+                    db_schema_cache[db_uri] = schema_text
 
-                return jsonify({"schema": schema_text.strip()})
+                return jsonify({"schema": schema_text})
             except Exception as e:
                 import traceback
                 traceback.print_exc()
@@ -463,7 +477,9 @@ def execute_sql():
                 return jsonify({"error": "No Database URI provided"})
             
             try:
-                engine = create_engine(db_uri)
+                if db_uri not in db_engine_cache:
+                    db_engine_cache[db_uri] = create_engine(db_uri, pool_pre_ping=True, pool_recycle=300)
+                engine = db_engine_cache[db_uri]
                 with engine.connect() as conn:
                     result = conn.execute(text(sql))
                     columns = list(result.keys())
@@ -490,7 +506,11 @@ def execute_sql():
 @app.route('/generate_insights', methods=['POST'])
 def generate_insights():
     try:
-        data_json = request.form.get('data')
+        data_json = request.form.get('data', '')
+        
+        # Truncate large data payloads to save tokens and prevent timeout
+        if len(data_json) > 1500:
+            data_json = data_json[:1500] + "... [TRUNCATED]"
 
         if client is None:
             return jsonify({'error': 'AI features are disabled because GROQ_API_KEY is not set.'})
