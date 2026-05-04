@@ -12,3 +12,5 @@ email-validator
 sendgrid
 gunicorn
 flask-cors
+pymysql
+cryptography
