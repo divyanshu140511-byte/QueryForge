@@ -1,2 +1,3 @@
 templates/*linguist-detectable=false
-static/*linguist-detectable=falses
+static/*linguist-detectable=false
+*.html linguist-detectable=false
